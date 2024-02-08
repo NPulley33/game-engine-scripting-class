@@ -138,6 +138,43 @@ namespace Battleship {
             CancelInvoke("IncrementTime");
         }
 
+        public void Restart() {
+            DeselectCurrentCell();
+            time = 0; score = -1;
+            UpdateScore();
+            if (winLabel.active) {
+                InvokeRepeating("IncrementTime", 1f, 1f);
+            }
+            winLabel.SetActive(false);
+            hits = new bool[nRows, nCols];
+
+            for (int r = 0; r < nRows; r++) {
+                for (int c = 0; c < nCols; c++) {
+                    row = r; col = c;
+                    Transform cell = GetCurrentCell();
+                    Transform hit = cell.Find("Hit");
+                    Transform miss = cell.Find("Miss");
+                    hit.gameObject.SetActive(false);
+                    miss.gameObject.SetActive(false);
+                }
+            }
+            row = 0; col = 0;
+            SelectCurrentCell();
+
+            int random;
+            for (int i = 0; i < grid.GetLength(0); i++) {
+                for (int j = 0; j < grid.GetLength(1); j++) {
+                    random = Random.Range(0, 11);
+                    if (random > 6) {
+                        grid[i, j] = 1;
+                    } else { 
+                        grid[i, j] = 0; 
+                    }
+                }
+            }
+
+        }
+
     }
     
 }
