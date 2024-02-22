@@ -12,7 +12,6 @@ public class Bee : MonoBehaviour
         SpawnHive = hive;
     }
 
-    //funct initialize(Hive hive)
     //funct check any flower
     //search for flowers in level
     //fly to flower

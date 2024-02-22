@@ -26,8 +26,11 @@ public class Hive : MonoBehaviour
         {
             //creates a new instance of a bee object at the hive's location
             GameObject newBee = Instantiate(BeePrefab, transform.position, Quaternion.identity); //look into rotation later
+            //initilizes the Bee script
             newBee.GetComponent<Bee>().Initialize(this);
         }
+
+        Timer = HoneyProductionRate;
     }
 
     //function make honey
@@ -36,18 +39,38 @@ public class Hive : MonoBehaviour
     //nectar count ++
     //if not counting down start timer
 
-    // Start is called before the first frame update
-    void Start()
-    {
-        //instantiate # of bees in starting bees int
-        //initilize funct for bees (pass self as ref)
-    }
-
     // Update is called once per frame
     void Update()
     {
-        //if has nectar count down to create honey
-            //remove 1 nectar & add 1 honey
-            //check for more nectar- if yes restart timer
+        //checking if we have nectar to make honey and that we aren't already making honey
+        if (isCountingDown == false && AmtNectar > 0) //ensures that this does keep firing all the time
+        {
+            InvokeRepeating("Counter", 1f, 1f);
+            isCountingDown = true;
+        }
+    }
+
+    //called from Bee- increases the amount of nectar the hive has
+    public void GetNectar() => AmtNectar++;
+
+    private void MakeHoney()
+    {
+        //stop the timer
+        CancelInvoke("Counter");
+
+        //update attributes
+        AmtNectar--;
+        AmtHoney++;
+
+        //reset timer 
+        Timer = HoneyProductionRate;
+        isCountingDown = false;
+    }
+
+    private void Counter() 
+    {
+        Timer--;
+        //when timer is up/reaches 0 make honey
+        if (Timer <= 0) MakeHoney();
     }
 }
