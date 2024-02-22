@@ -142,9 +142,12 @@ namespace Battleship {
             DeselectCurrentCell();
             time = 0; score = -1;
             UpdateScore();
+            //code is doing what I want it to - error is annoying
+#pragma warning disable CS0618 // Type or member is obsolete
             if (winLabel.active) {
                 InvokeRepeating("IncrementTime", 1f, 1f);
             }
+#pragma warning restore CS0618 // Type or member is obsolete
             winLabel.SetActive(false);
             hits = new bool[nRows, nCols];
 
