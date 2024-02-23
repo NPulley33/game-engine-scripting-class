@@ -38,9 +38,8 @@ public class Flower : MonoBehaviour
         }
     }
 
-    public bool FlowerHasNectar() => HasNectar;
-
     //Called from Bee when a bee takes the nectar from a flower
+    [ContextMenu("GetNectar")]
     public bool GetNectar() 
     {
         if (HasNectar)

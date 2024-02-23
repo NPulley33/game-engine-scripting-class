@@ -51,6 +51,7 @@ public class Hive : MonoBehaviour
     }
 
     //called from Bee- increases the amount of nectar the hive has
+    [ContextMenu("Get Nectar")]
     public void GetNectar() => AmtNectar++;
 
     private void MakeHoney()
@@ -61,6 +62,7 @@ public class Hive : MonoBehaviour
         //update attributes
         AmtNectar--;
         AmtHoney++;
+        Debug.Log("Made Honey");
 
         //reset timer 
         Timer = HoneyProductionRate;
