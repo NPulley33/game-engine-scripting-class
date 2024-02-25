@@ -1,6 +1,7 @@
 using DG.Tweening;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 public class Hive : MonoBehaviour
@@ -12,13 +13,14 @@ public class Hive : MonoBehaviour
     //int honey amount
     //float counter/timer
     //bool counting down
-    [SerializeField] private float HoneyProductionRate = 8;
+    [SerializeField] private float HoneyProductionRate = 3;
     private float Timer;
     private bool isCountingDown;
     private int StartingNumOfBees= 3;
     [SerializeField] private int AmtNectar;
     [SerializeField] private int AmtHoney;
     [SerializeField] private GameObject BeePrefab;
+    [SerializeField] private TextMeshProUGUI honeyLabel;
 
     private void Awake()
     {
@@ -29,7 +31,7 @@ public class Hive : MonoBehaviour
             //initilizes the Bee script
             newBee.GetComponent<Bee>().Initialize(this);
         }
-
+        honeyLabel.text = "Honey: 0";
         Timer = HoneyProductionRate;
     }
 
@@ -62,7 +64,8 @@ public class Hive : MonoBehaviour
         //update attributes
         AmtNectar--;
         AmtHoney++;
-        Debug.Log("Made Honey");
+        honeyLabel.text = $"Honey: {AmtHoney}";
+        //Debug.Log("Made Honey");
 
         //reset timer 
         Timer = HoneyProductionRate;

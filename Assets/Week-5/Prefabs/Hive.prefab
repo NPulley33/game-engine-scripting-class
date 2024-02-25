@@ -97,7 +97,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 77f64374b346df84e817af00a29ebcbd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  HoneyProductionRate: 8
+  HoneyProductionRate: 3
   AmtNectar: 0
   AmtHoney: 0
   BeePrefab: {fileID: 4343357849098163149, guid: 8d4351c70243854499c5c318e4877450, type: 3}
+  honeyLabel: {fileID: 0}
