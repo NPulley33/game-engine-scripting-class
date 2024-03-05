@@ -16,10 +16,16 @@ public class PlayerController2D : MonoBehaviour
 
     [SerializeField] GameObject winText;
 
+    private int Health;
+    private int Keys;
+
+
     //initialize/assign variables
     private void Awake()
     {
         PlayerControls = new PlayerInputActions();
+        Health = 10;
+        Keys = 0;
     }
     //enables input action sub actions
     private void OnEnable()
@@ -56,7 +62,16 @@ public class PlayerController2D : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        winText.SetActive(true);
+        if (collision.tag == "Finish") winText.SetActive(true);
+        if (collision.name == "Key") {
+            Keys++;
+            Destroy(collision.gameObject);
+            Debug.Log($"{Keys}, Key destoryed");
+        }
     }
+
+    //returns the number of keys a player has, used to open doors
+    public int GetKeys() => Keys;
+    public void Damage() => Health--;
 
 }
