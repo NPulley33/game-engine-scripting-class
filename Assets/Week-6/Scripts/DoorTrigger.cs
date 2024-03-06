@@ -29,14 +29,21 @@ public class DoorTrigger : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
+        PlayerController2D player = collision.GetComponent<PlayerController2D>();
         //checks if the collider is a player object and if the player has keys to be able to open the door
-        if (collision.tag == "Player" && collision.GetComponent<PlayerController2D>().GetKeys() > 0)
+        if (collision.tag == "Player" && player.GetKeys() > 0)
         {
             isOpening = true;
             Debug.Log("Player has a key");
+            //get rid of player key
+            player.UseKey();
+            player.UpdateKeyText();
         }
         else Debug.Log("Player does not have a key");
     }
+
+    //could get rid of to make doors stay open once unlocked
+    //would then have to rotate the doors so that they stay out of the way of other paths
     private void OnTriggerExit2D(Collider2D collision)
     {
         isOpening = false;

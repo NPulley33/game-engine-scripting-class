@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 public class PlayerController2D : MonoBehaviour
 {
@@ -14,10 +15,16 @@ public class PlayerController2D : MonoBehaviour
     Vector2 moveDirection = Vector2.zero;
     [SerializeField] float moveSpeed = 5f;
 
+    private Vector2 startPosition;
+
     [SerializeField] GameObject winText;
+    [SerializeField] TextMeshProUGUI healthText;
+    [SerializeField] TextMeshProUGUI keysText;
+    [SerializeField] TextMeshProUGUI gemsText;
 
     private int Health;
     private int Keys;
+    private int Gems;
 
 
     //initialize/assign variables
@@ -26,6 +33,10 @@ public class PlayerController2D : MonoBehaviour
         PlayerControls = new PlayerInputActions();
         Health = 10;
         Keys = 0;
+        keysText.text = "Keys: 0";
+        gemsText.text = "Gems: 0";
+        healthText.text = $"Health: {Health * 10}%";
+        startPosition = transform.position;
     }
     //enables input action sub actions
     private void OnEnable()
@@ -55,23 +66,50 @@ public class PlayerController2D : MonoBehaviour
         rb.velocity = new Vector2(moveDirection.x * moveSpeed, moveDirection.y * moveSpeed);
     }
 
-    //called on a fire action- used for combat?
+    //use this to attempt to open doors??
     private void Fire(InputAction.CallbackContext context) {
         Debug.Log("Fire");
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (collision.tag == "Finish") winText.SetActive(true);
-        if (collision.name == "Key") {
-            Keys++;
-            Destroy(collision.gameObject);
-            Debug.Log($"{Keys}, Key destoryed");
+        switch (collision.tag) {
+            case "Finish":
+                winText.SetActive(true);
+                break;
+            case "Key":
+                Keys++;
+                Destroy(collision.gameObject);
+                UpdateKeyText();
+                break;
+            case "Trap":
+                Damage();
+                break;
+            case "Gem":
+                Gems++;
+                Destroy(collision.gameObject);
+                gemsText.text = $"Gems: {Gems}";
+                break;
         }
     }
 
-    //returns the number of keys a player has, used to open doors
-    public int GetKeys() => Keys;
-    public void Damage() => Health--;
+    public void UpdateKeyText() { keysText.text = $"Keys: {Keys}"; }
+    public void Damage() 
+    {
+        Health--;
+        healthText.text = $"Health: {Health * 10}%";
+        if (Health <= 0) {
+            Restart();
+        }
+    }
+    private void Restart()
+    {
+        //reset the secene?
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+    }
+
+
+    public int GetKeys() => Keys; //returns the number of keys a player has, used to open doors
+    public void UseKey() => Keys--; //uses a key when a player goes through a door
 
 }
