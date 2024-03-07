@@ -15,13 +15,13 @@ public class PlayerController2D : MonoBehaviour
     Vector2 moveDirection = Vector2.zero;
     [SerializeField] float moveSpeed = 5f;
 
-    private Vector2 startPosition;
-
+    //UI elements/Text
     [SerializeField] GameObject winText;
     [SerializeField] TextMeshProUGUI healthText;
     [SerializeField] TextMeshProUGUI keysText;
     [SerializeField] TextMeshProUGUI gemsText;
 
+    //player health and pickups
     private int Health;
     private int Keys;
     private int Gems;
@@ -36,7 +36,6 @@ public class PlayerController2D : MonoBehaviour
         keysText.text = "Keys: 0";
         gemsText.text = "Gems: 0";
         healthText.text = $"Health: {Health * 10}%";
-        startPosition = transform.position;
     }
     //enables input action sub actions
     private void OnEnable()
@@ -66,13 +65,13 @@ public class PlayerController2D : MonoBehaviour
         rb.velocity = new Vector2(moveDirection.x * moveSpeed, moveDirection.y * moveSpeed);
     }
 
-    //use this to attempt to open doors??
     private void Fire(InputAction.CallbackContext context) {
         Debug.Log("Fire");
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
+        //determines what the player is intereacting with and determines what it should do accordingly
         switch (collision.tag) {
             case "Finish":
                 winText.SetActive(true);
@@ -93,6 +92,7 @@ public class PlayerController2D : MonoBehaviour
         }
     }
 
+    //update UI text
     public void UpdateKeyText() { keysText.text = $"Keys: {Keys}"; }
     public void Damage() 
     {
@@ -102,9 +102,9 @@ public class PlayerController2D : MonoBehaviour
             Restart();
         }
     }
+    //If player dies/loses all health, the scene resets
     private void Restart()
     {
-        //reset the secene?
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
