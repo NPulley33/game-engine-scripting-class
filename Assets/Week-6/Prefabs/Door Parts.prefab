@@ -309,3 +309,4 @@ MonoBehaviour:
   door: {fileID: 6275151375760154504}
   openSpeedModifier: 2.75
   isOpening: 0
+  DoorInstructions: {fileID: 0}
