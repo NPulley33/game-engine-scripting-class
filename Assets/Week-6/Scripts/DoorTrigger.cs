@@ -11,17 +11,35 @@ public class DoorTrigger : MonoBehaviour
     Vector2 origin; //door's position when open
     Vector2 target; //door's position when closed
 
+    private bool playerIsInTrigger;
+    private bool playerPressedOpen;
     public bool isOpening;
     private float alpha;
 
     [SerializeField] GameObject DoorInstructions;
     private bool firstOpen;
 
+    public PlayerInputActions PlayerControls;
+    private InputAction open;
+
     private void Awake()
     {
+        PlayerControls = new PlayerInputActions();
         origin = door.transform.position;
         target = origin + (Vector2.up * 2);
         firstOpen = true;
+        playerIsInTrigger = false;
+        playerPressedOpen = false;
+    }
+    private void OnEnable()
+    {
+        open = PlayerControls.Player.Open;
+        open.Enable();
+        open.performed += Open;
+    }
+    private void OnDisable()
+    {
+        open.Disable();
     }
 
     private void Update()
@@ -33,17 +51,18 @@ public class DoorTrigger : MonoBehaviour
         door.transform.position = Vector2.Lerp(origin, target, alpha);
     }
 
-    private void OnTriggerEnter2D(Collider2D collision)
+    private void OnTriggerStay2D(Collider2D collision)
     {
         //tells the player how to open a door the first time they encounter one until the first time they open one
         if (firstOpen) DoorInstructions.SetActive(true);
-
+        playerIsInTrigger = true;
         PlayerController2D player = collision.GetComponent<PlayerController2D>();
 
         //checks if the collider is a player object and if the player has keys to be able to open the door
-        if (player.tag == "Player" && player.GetKeys() > 0)
+        if (player.tag == "Player" && player.GetKeys() > 0 && playerPressedOpen)
         {
             isOpening = true;
+            Debug.Log(playerPressedOpen);
 
             //get rid of player key
             player.UseKey();
@@ -60,6 +79,14 @@ public class DoorTrigger : MonoBehaviour
     {
         isOpening = false;
         DoorInstructions.SetActive(false);
+        playerPressedOpen = false;
+        playerIsInTrigger = false;
+    }
+
+    private void Open(InputAction.CallbackContext context)
+    {
+        Debug.Log("Opened");
+        if (playerIsInTrigger) playerPressedOpen = true;
     }
 
 }
