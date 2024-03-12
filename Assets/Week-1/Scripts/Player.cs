@@ -10,10 +10,13 @@ public class Player : MonoBehaviour
     private float mouseDeltaX = 0f;
     private int rotDir = 0;
     // Start is called before the first frame update
+
+    //commented out lines are for Unity's old input system. 
+    //other assignments in this project use the new input system, which overrides it
     void Start()
     {
         characterController = GetComponent<CharacterController>();
-        lastMouseX = Input.mousePosition.x;
+        //lastMouseX = Input.mousePosition.x;
     }
     private void Update()
     {
@@ -22,17 +25,17 @@ public class Player : MonoBehaviour
     }
     void HandleMovement()
     {
-        Vector3 input = (Input.GetAxis("Horizontal") * transform.right) +
-        (transform.forward * Input.GetAxis("Vertical"));
-        characterController.Move(input * speed * Time.deltaTime);
+        //Vector3 input = (Input.GetAxis("Horizontal") * transform.right) +
+        //(transform.forward * Input.GetAxis("Vertical"));
+        //characterController.Move(input * speed * Time.deltaTime);
     }
     void HandleRotation()
     {
-        mouseDeltaX = Input.mousePosition.x - lastMouseX;
+       // mouseDeltaX = Input.mousePosition.x - lastMouseX;
         if (mouseDeltaX != 0)
         {
             rotDir = mouseDeltaX > 0 ? 1 : -1;
-            lastMouseX = Input.mousePosition.x;
+           // lastMouseX = Input.mousePosition.x;
             transform.eulerAngles += new Vector3(0, rotation * Time.deltaTime *
             rotDir, 0);
         }
