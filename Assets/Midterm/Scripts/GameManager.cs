@@ -39,6 +39,8 @@ namespace Flow {
         private Transform prevLineStart;
         private Transform prevCell;
         private string currentColor;
+        private bool lineEndSelected;
+        private bool lineDisconnected;
 
         //win conditions
         bool redLineComplete;
@@ -131,6 +133,8 @@ namespace Flow {
             blueLineComplete = false;
             yellowLineComplete = false;
             purpleLineComplete = false;
+
+            lineDisconnected = false;
         }
 
         private void OnEnable()
@@ -156,27 +160,54 @@ namespace Flow {
             HandleMovement();
         }
 
-        void DrawLines(string color)
-        { 
-            //check hasColor[] to see if the current cell already is filled
-            Transform cell = GetCurrentCell();
-            if (hasColor[row, col]) return; //cannot draw a line in that space
+        void DrawLines(Transform cell)
+        {
+            if (cell.gameObject.tag == "Color End") return;
 
-            Transform colorLayer = cell.Find(color);
+            //does not draw if there is not line end selected
+            if (lineEndSelected == false || lineDisconnected)
+            {
+                Debug.Log("lineEnd not selected");
+                Debug.Log($"lineDisconnected: {lineDisconnected}");
+                return;
+            }
+
+            //check hasColor[] to see if the current cell already is filled
+            //check if the line is disconnected
+            if (FindLineColor(cell) != FindLineColor(prevLineStart))
+            {
+                Debug.Log($"hasColor: {hasColor[row, col]}");
+                CancelLine(cell);
+                lineDisconnected = true;
+                return; //cannot draw a line in that space
+            }
+            else lineDisconnected = false;
+
+            Transform colorLayer = cell.Find(FindLineColor(prevLineStart));
             colorLayer.gameObject.SetActive(true);
+            hasColor[row, col] = true;
+            Debug.Log("Drew color");
         }
-        void CancelLine(string color)
-        { 
+        void CancelLine(Transform cell)
+        {
+            //prevents line ends from being turned off
+            if (cell.gameObject.tag == "Color End") return;
+
+            string color = FindLineColor(prevLineStart);
+
             //clears out all instances of a certain line color 
             for (int i = 0; i < nRows; i++)
             {
                 for (int j = 0; j < nCols; j++)
                 {
-                    Transform cell = GridRoot.GetChild((i * nCols) + j);
+                    Transform tempCell = GridRoot.GetChild((i * nCols) + j);
                     Transform colorLayer = cell.Find(color);
-#pragma warning disable CS0618 // Type or member is obsolete
-                    if (colorLayer.gameObject.active) colorLayer.gameObject.SetActive(false);
-#pragma warning restore CS0618 // Type or member is obsolete
+                    if (colorLayer.gameObject.active)
+                    {
+                        colorLayer.gameObject.SetActive(false);
+                        hasColor[i, j] = false;
+                    } 
+
                 }
             }
         }
@@ -210,18 +241,53 @@ namespace Flow {
                 Transform select = cell.Find("Selected");
                 select.gameObject.SetActive(true);
 
-                //set a bool to the color of the end selected
                 //check to see if the line was completed by comparing the colors of the ends form prevLineStart & current select
                 //if selecting the current cell of a color that is not finished, reset all lines of that color
+                if (prevLineStart != null && FindLineColor(cell) == FindLineColor(prevLineStart)) SetLineFinished(FindLineColor(cell), true);
+                else CancelLine(cell);
 
-                prevLineStart = select;
+                prevLineStart = cell;
+                lineEndSelected = true;
+                lineDisconnected = false;
             }
         }
         void DeselectLineStart()
         {
             if (prevLineStart != null) //prevents error when clicking for the first time
             { 
-                prevLineStart.gameObject.SetActive(false); 
+                prevLineStart.Find("Selected").gameObject.SetActive(false); 
+                lineDisconnected = false;
+            }
+        }
+
+        string FindLineColor(Transform line)
+        {
+            if (line.Find("Red").gameObject.active) return "Red";
+            if (line.Find("Green").gameObject.active) return "Green";
+            if (line.Find("Blue").gameObject.active) return "Blue";
+            if (line.Find("Yellow").gameObject.active) return "Yellow";
+            if (line.Find("Purple").gameObject.active) return "Purple";
+            return "none";
+        }
+        void SetLineFinished(string lineColor, bool finished)
+        {
+            switch (lineColor) 
+            {
+                case "Red":
+                    redLineComplete = finished;
+                    break;
+                case "Green":
+                    greenLineComplete = finished;
+                    break;
+                case "Blue":
+                    blueLineComplete = finished;
+                    break;
+                case "Yellow":
+                    yellowLineComplete = finished;
+                    break;
+                case "Purple":
+                    purpleLineComplete = finished;
+                    break;
             }
         }
 
@@ -231,6 +297,7 @@ namespace Flow {
             if (downWasPressed) MoveVertical(1);
             if (leftWasPressed) MoveHorizontal(-1);
             if (rightWasPressed) MoveHorizontal(1);
+            DrawLines(GetCurrentCell());
         }
 
         public void MoveHorizontal(int amt)
@@ -261,5 +328,4 @@ namespace Flow {
         }
 
     }
-
 }
