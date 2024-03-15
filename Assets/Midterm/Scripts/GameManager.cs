@@ -6,7 +6,8 @@ using UnityEditor.U2D.Aseprite;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace Flow { 
+namespace Flow
+{
     public class GameManager : MonoBehaviour
     {
         //1 = red, 2 = green, 3 = blue, 4 = yellow, 5 = purple
@@ -25,22 +26,20 @@ namespace Flow {
         private int nCols;
         private int row;
         private int col;
-        private int time;
 
         //parent of cells
         [SerializeField] Transform GridRoot;
         //template to populate gird
         [SerializeField] GameObject cellPrefab;
         [SerializeField] GameObject colorEnds;
-        //[SerializeField] GameObject winLabel;
-        //[SerializeField] TextMeshProUGUI timeLabel;
+        [SerializeField] GameObject winLabel;
 
         //variables that are set in one method and used in another without the methods calling each other to send the value
         private Transform prevLineStart;
         private Transform prevCell;
-        private string currentColor;
         private bool lineEndSelected;
         private bool lineDisconnected;
+        private string currentColor;
 
         //win conditions
         bool redLineComplete;
@@ -62,72 +61,69 @@ namespace Flow {
 
         private void Awake()
         {
+            //set up game board
             nRows = grid.GetLength(0);
             nCols = grid.GetLength(1);
 
             //create bool[] w/ dimensions of grid
-            hasColor = new bool[nRows, nCols];  
-            //determines if a cell is already filled/blocked/has a color
-            for (int i = 0; i < nRows; i++)
-            {
-                for (int j = 0; j < nCols; j++)
-                { 
-                    if (grid[i,j] > 0) hasColor[i,j] = true;    
-                }
-            }
-            //finds where the ends of the colors are at the start and sets them as a different type of cell prefab
-            //if no color, regular cell perfab
+            hasColor = new bool[nRows, nCols];
+            //determines if a cell has a color in it (color/line ends) at the start
             for (int i = 0; i < nRows; i++)
             {
                 for (int j = 0; j < nCols; j++)
                 {
-                    if (hasColor[i, j]) 
+                    if (grid[i, j] > 0) hasColor[i, j] = true;
+                }
+            }
+            //finds where the ends of the colors are at the start and sets them as a different type of cell prefab
+            //if no color, set as a regular cell perfab
+            for (int i = 0; i < nRows; i++)
+            {
+                for (int j = 0; j < nCols; j++)
+                {
+                    if (hasColor[i, j])
                     {
                         Instantiate(colorEnds, GridRoot);
+
+                        //shows the specific color of the color end
+                        row = i; col = j;
+                        Transform cell = GetCurrentCell();
+                        switch (grid[i, j])
+                        {
+                            case 1:
+                                Transform red = cell.Find("Red");
+                                red.gameObject.SetActive(true);
+                                break;
+                            case 2:
+                                Transform green = cell.Find("Green");
+                                green.gameObject.SetActive(true);
+                                break;
+                            case 3:
+                                Transform blue = cell.Find("Blue");
+                                blue.gameObject.SetActive(true);
+                                break;
+                            case 4:
+                                Transform yellow = cell.Find("Yellow");
+                                yellow.gameObject.SetActive(true);
+                                break;
+                            case 5:
+                                Transform purple = cell.Find("Purple");
+                                purple.gameObject.SetActive(true);
+                                break;
+                        }
                     }
                     else Instantiate(cellPrefab, GridRoot);
                 }
             }
-            //shows ends of the colors
-            for (int i = 0; i < nRows; i++)
-            {
-                for (int j = 0; j < nCols; j++)
-                {
-                    row = i; col = j;
-                    Transform cell = GetCurrentCell();
-                    switch (grid[i,j])
-                    {
-                        case 1:
-                            Transform red = cell.Find("Red");
-                            red.gameObject.SetActive(true);
-                            break;
-                        case 2:
-                            Transform green = cell.Find("Green");
-                            green.gameObject.SetActive(true);
-                            break;
-                        case 3:
-                            Transform blue = cell.Find("Blue");
-                            blue.gameObject.SetActive(true);
-                            break;
-                        case 4:
-                            Transform yellow = cell.Find("Yellow");
-                            yellow.gameObject.SetActive(true);
-                            break;
-                        case 5:
-                            Transform purple = cell.Find("Purple");
-                            purple.gameObject.SetActive(true);
-                            break;
-                    }
-                }
-            }
+            //reset rows & cols, select the first cell in the grid
             row = 0;
-            col = 0;    
+            col = 0;
             SelectCurrentCell();
-
+            //set up player inputs
             input = new Input();
             click = input.Player.Click;
             move = input.Player.Move;
-
+            //win conditions are all false at start
             redLineComplete = false;
             greenLineComplete = false;
             blueLineComplete = false;
@@ -135,8 +131,10 @@ namespace Flow {
             purpleLineComplete = false;
 
             lineDisconnected = false;
+            lineEndSelected = false;
         }
 
+        //set up player inputs
         private void OnEnable()
         {
             click.Enable();
@@ -153,6 +151,7 @@ namespace Flow {
         void Update()
         {
             //code idea from https://docs.unity3d.com/Packages/com.unity.inputsystem@1.7/api/UnityEngine.InputSystem.Controls.ButtonControl.html#UnityEngine_InputSystem_Controls_ButtonControl_wasPressedThisFrame
+            //way of keeping each key to one specific input but checking which specific key was pressed to get a direction for movement
             upWasPressed = Keyboard.current.wKey.wasPressedThisFrame || Keyboard.current.upArrowKey.wasPressedThisFrame;
             downWasPressed = Keyboard.current.sKey.wasPressedThisFrame || Keyboard.current.downArrowKey.wasPressedThisFrame;
             leftWasPressed = Keyboard.current.aKey.wasPressedThisFrame || Keyboard.current.leftArrowKey.wasPressedThisFrame;
@@ -162,63 +161,56 @@ namespace Flow {
 
         void DrawLines(Transform cell)
         {
-            if (cell.gameObject.tag == "Color End") return;
+            if (cell.gameObject.tag == "Color End" || lineEndSelected == false) return;
 
-            //does not draw if there is not line end selected
-            if (lineEndSelected == false || lineDisconnected)
+            //does not draw if there is not line end selected (aka start of game)
+            if (lineDisconnected)
             {
-                Debug.Log("lineEnd not selected");
                 Debug.Log($"lineDisconnected: {lineDisconnected}");
                 return;
             }
 
-            //check hasColor[] to see if the current cell already is filled
-            //check if the line is disconnected
-            if (FindLineColor(cell) != FindLineColor(prevLineStart))
-            {
-                Debug.Log($"hasColor: {hasColor[row, col]}");
-                CancelLine(cell);
-                lineDisconnected = true;
-                return; //cannot draw a line in that space
+            //clear the color in that space if there isn't already a color in the space
+            //essential overrides the current color there
+            if (hasColor[row, col])
+            { 
+                string lineColor = FindLineColor(cell);
+                if (lineColor != currentColor)
+                {
+                    SetLineFinished(lineColor, false);
+                    ClearLine(lineColor);
+                    Debug.Log("reset end color");                
+                }
             }
-            else lineDisconnected = false;
+            
 
             Transform colorLayer = cell.Find(FindLineColor(prevLineStart));
             colorLayer.gameObject.SetActive(true);
             hasColor[row, col] = true;
-            Debug.Log("Drew color");
         }
-        void CancelLine(Transform cell)
+        void ClearLine(string color)
         {
-            //prevents line ends from being turned off
-            if (cell.gameObject.tag == "Color End") return;
-
-            string color = FindLineColor(prevLineStart);
-
-            //clears out all instances of a certain line color 
-            for (int i = 0; i < nRows; i++)
+            for (int r = 0; r < grid.GetLength(0); r++)
             {
-                for (int j = 0; j < nCols; j++)
+                for (int c = 0; c < grid.GetLength(1); c++)
                 {
-                    Transform tempCell = GridRoot.GetChild((i * nCols) + j);
-                    Transform colorLayer = cell.Find(color);
-                    if (colorLayer.gameObject.active)
-                    {
-                        colorLayer.gameObject.SetActive(false);
-                        hasColor[i, j] = false;
-                    } 
-
+                    Transform currentCell = GridRoot.GetChild((r * nCols) + c);
+                    if (currentCell.gameObject.tag == "Color End") break;
+                    Transform colorLayer = currentCell.Find(color);
+                    if (colorLayer != null) colorLayer.gameObject.SetActive(false);
                 }
             }
         }
 
         Transform GetCurrentCell()
         {
+            //finds the current cell in the grid
             int index = (row * nCols) + col;
             return GridRoot.GetChild(index);
         }
         void SelectCurrentCell()
-        { 
+        {
+            //shows what cell the player is on by displaying an alternate outline
             Transform cell = GetCurrentCell();
             Transform cursor = cell.Find("Cursor");
             cursor.gameObject.SetActive(true);
@@ -235,18 +227,23 @@ namespace Flow {
         }
         void SelectLineStart()
         {
+            //shows which end of a color (specifically) is selected by displaying a unique outline 
             Transform cell = GetCurrentCell();
-            if (cell.gameObject.tag == "Color End") 
-            { 
+            if (cell.gameObject.tag == "Color End") //check to make sure the cell is the end of a color
+            {
                 Transform select = cell.Find("Selected");
-                select.gameObject.SetActive(true);
+                select.gameObject.SetActive(true); //draws the outline
 
                 //check to see if the line was completed by comparing the colors of the ends form prevLineStart & current select
                 //if selecting the current cell of a color that is not finished, reset all lines of that color
-                if (prevLineStart != null && FindLineColor(cell) == FindLineColor(prevLineStart)) SetLineFinished(FindLineColor(cell), true);
-                else CancelLine(cell);
+                currentColor = FindLineColor(cell);
+                if (prevLineStart != null && currentColor == FindLineColor(prevLineStart))
+                { 
+                    SetLineFinished(currentColor, true);
+                    CheckEnding();
+                }
 
-                prevLineStart = cell;
+                prevLineStart = cell; //the next previous start of the line is the current start of a line
                 lineEndSelected = true;
                 lineDisconnected = false;
             }
@@ -254,9 +251,10 @@ namespace Flow {
         void DeselectLineStart()
         {
             if (prevLineStart != null) //prevents error when clicking for the first time
-            { 
-                prevLineStart.Find("Selected").gameObject.SetActive(false); 
+            {
+                prevLineStart.Find("Selected").gameObject.SetActive(false);
                 lineDisconnected = false;
+                lineEndSelected = false; 
             }
         }
 
@@ -271,7 +269,7 @@ namespace Flow {
         }
         void SetLineFinished(string lineColor, bool finished)
         {
-            switch (lineColor) 
+            switch (lineColor)
             {
                 case "Red":
                     redLineComplete = finished;
@@ -290,8 +288,15 @@ namespace Flow {
                     break;
             }
         }
+        void CheckEnding()
+        {
+            if (redLineComplete && greenLineComplete && blueLineComplete && yellowLineComplete && purpleLineComplete)
+            {
+                winLabel.SetActive(true); 
+            }
+        }
 
-        void HandleMovement() 
+        void HandleMovement()
         {
             if (upWasPressed) MoveVertical(-1);
             if (downWasPressed) MoveVertical(1);
@@ -309,7 +314,7 @@ namespace Flow {
             //select new cell
             SelectCurrentCell();
         }
-        public void MoveVertical(int amt) 
+        public void MoveVertical(int amt)
         {
             DeselectCurrentCell();
             //move to new cell & make sure it stays within bounds
@@ -322,7 +327,7 @@ namespace Flow {
         void Click(InputAction.CallbackContext context)
         {
             //called when player clicks
-            //use to identify where the player clicked, if the cell is a starting cell, and 
+            //use to identify where the player clicked, & if the cell is a line end
             DeselectLineStart();
             SelectLineStart();
         }
