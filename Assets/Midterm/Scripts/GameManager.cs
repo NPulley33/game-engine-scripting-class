@@ -34,6 +34,12 @@ namespace Flow
         [SerializeField] GameObject colorEnds;
         [SerializeField] GameObject winLabel;
 
+        [SerializeField] TextMeshProUGUI redComplete;
+        [SerializeField] TextMeshProUGUI greenComplete;
+        [SerializeField] TextMeshProUGUI blueComplete;
+        [SerializeField] TextMeshProUGUI yellowComplete;
+        [SerializeField] TextMeshProUGUI purpleComplete;
+
         //variables that are set in one method and used in another without the methods calling each other to send the value
         private Transform prevLineStart;
         private Transform prevCell;
@@ -182,7 +188,6 @@ namespace Flow
                     Debug.Log("reset end color");                
                 }
             }
-            
 
             Transform colorLayer = cell.Find(FindLineColor(prevLineStart));
             colorLayer.gameObject.SetActive(true);
@@ -195,9 +200,16 @@ namespace Flow
                 for (int c = 0; c < grid.GetLength(1); c++)
                 {
                     Transform currentCell = GridRoot.GetChild((r * nCols) + c);
+                    //if the cell it's looking at is a color end, do not reset it
                     if (currentCell.gameObject.tag == "Color End") break;
+                    //turn off the specified color 
                     Transform colorLayer = currentCell.Find(color);
-                    if (colorLayer != null) colorLayer.gameObject.SetActive(false);
+                    if (hasColor[r,c] && FindLineColor(currentCell) == color)
+                    //if (colorLayer != null) 
+                    {
+                        colorLayer.gameObject.SetActive(false);
+                        hasColor[r, c] = false;
+                    }
                 }
             }
         }
@@ -208,6 +220,7 @@ namespace Flow
             int index = (row * nCols) + col;
             return GridRoot.GetChild(index);
         }
+
         void SelectCurrentCell()
         {
             //shows what cell the player is on by displaying an alternate outline
@@ -218,7 +231,7 @@ namespace Flow
         }
         void DeselectCurrentCell()
         {
-            if (prevCell != null)
+            if (prevCell != null) //prevents error when clicking for the first time & prevCell hasn't been assigned yet
             {
                 Transform cell = GetCurrentCell();
                 Transform cursor = cell.Find("Cursor");
@@ -250,7 +263,7 @@ namespace Flow
         }
         void DeselectLineStart()
         {
-            if (prevLineStart != null) //prevents error when clicking for the first time
+            if (prevLineStart != null) //prevents error when clicking for the first time & prevLineStart hasn't been assigned yet
             {
                 prevLineStart.Find("Selected").gameObject.SetActive(false);
                 lineDisconnected = false;
@@ -269,22 +282,28 @@ namespace Flow
         }
         void SetLineFinished(string lineColor, bool finished)
         {
+            //changes the status of a complete line boolean to determine if the game ended or not
             switch (lineColor)
             {
                 case "Red":
                     redLineComplete = finished;
+                    redComplete.text = $"Red Line Complete: {finished}";
                     break;
                 case "Green":
                     greenLineComplete = finished;
+                    greenComplete.text = $"Green Line Complete: {finished}";
                     break;
                 case "Blue":
                     blueLineComplete = finished;
+                    blueComplete.text = $"Blue Line Complete: {finished}";
                     break;
                 case "Yellow":
                     yellowLineComplete = finished;
+                    yellowComplete.text = $"Yellow Line Complete: {finished}";
                     break;
                 case "Purple":
                     purpleLineComplete = finished;
+                    purpleComplete.text = $"Purple Line Complete: {finished}";
                     break;
             }
         }
@@ -298,10 +317,12 @@ namespace Flow
 
         void HandleMovement()
         {
+            //updates cursor
             if (upWasPressed) MoveVertical(-1);
             if (downWasPressed) MoveVertical(1);
             if (leftWasPressed) MoveHorizontal(-1);
             if (rightWasPressed) MoveHorizontal(1);
+            //updates lines
             DrawLines(GetCurrentCell());
         }
 
