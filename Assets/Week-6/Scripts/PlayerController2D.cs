@@ -12,6 +12,7 @@ public class PlayerController2D : MonoBehaviour
     private InputAction move; 
     private InputAction fire;
 
+    Vector2 origin;
     Vector2 moveDirection = Vector2.zero;
     [SerializeField] float moveSpeed = 5f;
 
@@ -20,6 +21,7 @@ public class PlayerController2D : MonoBehaviour
     [SerializeField] TextMeshProUGUI healthText;
     [SerializeField] TextMeshProUGUI keysText;
     [SerializeField] TextMeshProUGUI gemsText;
+    [SerializeField] GameObject ResetGameButton;
 
     //player health and pickups
     private int Health;
@@ -36,7 +38,14 @@ public class PlayerController2D : MonoBehaviour
         keysText.text = "Keys: 0";
         gemsText.text = "Gems: 0";
         healthText.text = $"Health: {Health * 10}%";
+        origin = transform.position;
     }
+
+    private void Start()
+    {
+        GameManager.GetResetEvent().AddListener(OnReset);
+    }
+
     //enables input action sub actions
     private void OnEnable()
     {
@@ -52,6 +61,23 @@ public class PlayerController2D : MonoBehaviour
     {
         move.Disable();
         fire.Disable();
+    }
+
+    private void OnReset()
+    {
+        //reset all labels & values associated
+        Health = 10;
+        Keys = 0;
+        Gems = 0;
+        UpdateHealthText();
+        UpdateKeyText();
+        UpdateGemText();
+
+        //reset position or origin/starting position
+        transform.position = origin;
+
+        //disabling reset button if active
+        ResetGameButton.SetActive(false);
     }
 
     void Update()
@@ -75,10 +101,10 @@ public class PlayerController2D : MonoBehaviour
         switch (collision.tag) {
             case "Finish":
                 winText.SetActive(true);
+                ResetGameButton.SetActive(true);
                 break;
             case "Key":
                 Keys++;
-                Destroy(collision.gameObject);
                 UpdateKeyText();
                 break;
             case "Trap":
@@ -86,26 +112,23 @@ public class PlayerController2D : MonoBehaviour
                 break;
             case "Gem":
                 Gems++;
-                Destroy(collision.gameObject);
-                gemsText.text = $"Gems: {Gems}";
+                UpdateGemText();
                 break;
         }
     }
 
     //update UI text
     public void UpdateKeyText() { keysText.text = $"Keys: {Keys}"; }
+    public void UpdateGemText() { gemsText.text = $"Gems: {Gems}"; }
+    public void UpdateHealthText() { healthText.text = $"Health: {Health * 10}"; }
     public void Damage() 
     {
         Health--;
-        healthText.text = $"Health: {Health * 10}%";
+        UpdateHealthText();
         if (Health <= 0) {
-            Restart();
+            //If player dies/loses all health, the scene resets
+            GameManager.GetResetEvent().Invoke();
         }
-    }
-    //If player dies/loses all health, the scene resets
-    private void Restart()
-    {
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
 
