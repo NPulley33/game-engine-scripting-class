@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -10,6 +11,9 @@ namespace CharacterEditor
         [SerializeField] Button nextBodyPart;
         [SerializeField] Button loadGame;
 
+        [SerializeField] TextMeshProUGUI currentBodyPartLabel;
+        [SerializeField] TextMeshProUGUI currentMaterialLabel;
+
         [SerializeField] Character character;
 
         int id;
@@ -20,6 +24,7 @@ namespace CharacterEditor
             nextMaterial.onClick.AddListener(NextMaterial);
             nextBodyPart.onClick.AddListener(NextBodyPart);
             loadGame.onClick.AddListener(LoadGame);
+            UpdateLabelTexts();
         }
 
         void NextMaterial()
@@ -27,7 +32,7 @@ namespace CharacterEditor
             id++;
             if (id > 2) id = 0;
 
-            //TODO: Make a switch case for each BodyType and save the value of id to the correct PlayerPref
+            //saving id to PlayerPrefs to load the colors back in
             switch(bodyType)
             {
                 case BodyTypes.Arm:
@@ -44,14 +49,13 @@ namespace CharacterEditor
                     break;
             }
             PlayerPrefs.Save();
-
+            UpdateLabelTexts();
             character.Load();
         }
 
         void NextBodyPart()
         {
-            //TODO: Setup a switch case that will go through the different body types
-            //      ie if the current type is Head and we click next then set it to Body
+            //cycles through the different body parts when button is clicked
             switch (bodyType)
             {
                 case BodyTypes.Body:
@@ -68,8 +72,7 @@ namespace CharacterEditor
                     break;
             }
 
-            //TODO: Then setup another switch case that will get the current saved value
-            //      from the player prefs for the current body type and set it to id
+            //gets and sets current saved value to id
             switch (bodyType)
             {
                 case BodyTypes.Body:
@@ -85,11 +88,33 @@ namespace CharacterEditor
                     id = PlayerPrefs.GetInt("Leg", 0);
                     break;
             }
+            UpdateLabelTexts();
         }
 
         void LoadGame()
         {
             SceneManager.LoadScene("Game");
+        }
+
+        void UpdateLabelTexts()
+        {
+            currentBodyPartLabel.text = $"{bodyType}";
+
+            switch (bodyType)
+            {
+                case BodyTypes.Body:
+                    currentMaterialLabel.text = $"Color {PlayerPrefs.GetInt("Body", 0) + 1}";
+                    break;
+                case BodyTypes.Head:
+                    currentMaterialLabel.text = $"Color {PlayerPrefs.GetInt("Head", 0) + 1}";
+                    break;
+                case BodyTypes.Arm:
+                    currentMaterialLabel.text = $"Color {PlayerPrefs.GetInt("Arm", 0) + 1}";
+                    break;
+                case BodyTypes.Leg:
+                    currentMaterialLabel.text = $"Color {PlayerPrefs.GetInt("Leg", 0) + 1}";
+                    break;
+            }
         }
     }
 }

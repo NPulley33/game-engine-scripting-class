@@ -18,7 +18,7 @@ namespace CharacterEditor
 
         public void Load()
         {
-            //Load materials from the MaterialManager and pass in the id pulled from each PlayerPref here
+            //Load materials from the MaterialManager and pass in the id pulled from each PlayerPref 
             m_Head.material = MaterialManager.Get(BodyTypes.Head, PlayerPrefs.GetInt("Head", 0));
             m_Body.material = MaterialManager.Get(BodyTypes.Body, PlayerPrefs.GetInt("Body", 0));
             m_ArmL.material = MaterialManager.Get(BodyTypes.Arm, PlayerPrefs.GetInt("Arm", 0));
