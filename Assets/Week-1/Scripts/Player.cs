@@ -154,7 +154,6 @@ public class Player : MonoBehaviour
 
     void Fire(InputAction.CallbackContext context) 
     {
-        //Debug.Log("Fire");
         //Instantiate(bulletPrefab, BulletSpawnTransform.position, Camera.main.transform.rotation);
         Debug.Log("Fired");
         Instantiate(bulletPrefab, transform.position, Camera.main.transform.rotation);
