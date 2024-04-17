@@ -24,21 +24,21 @@ public class YoshiController : MonoBehaviour
     private InputAction look;
     private InputAction jump;
 
-    Rigidbody rb;
-    Animator animator;
+    [SerializeField] Rigidbody rb;
+    [SerializeField] Animator animator;
 
     private void Awake()
     {
         playerControls = new PlayerControls();
 
-        rb = GetComponent<Rigidbody>();
+        //rb = GetComponent<Rigidbody>();
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
 
         move = playerControls.Player.Move;
         jump = playerControls.Player.Jump;
         look = playerControls.Player.Look;
-        animator = GetComponent<Animator>();    
+        //animator = GetComponent<Animator>();    
     }
 
     private void OnEnable()
